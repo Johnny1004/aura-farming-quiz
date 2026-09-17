@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#100b24">
+  <title>Aura Farming Quiz</title>
+  <style>
+    :root {
+      --bg: #0d091d;
+      --panel: rgba(27, 20, 57, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #f7f4ff;
+      --muted: #b9b1d1;
+      --violet: #9b6cff;
+      --pink: #ff5fc8;
+      --gold: #ffc857;
+      --green: #43e6a2;
+      --red: #ff6680;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: clamp(16px, 4vw, 40px);
+      display: grid;
+      place-items: center;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: Inter, ui-rounded, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(155, 108, 255, 0.34), transparent 30%),
+        radial-gradient(circle at 88% 82%, rgba(255, 95, 200, 0.26), transparent 32%),
+        linear-gradient(145deg, #090615 0%, #151030 50%, #0a0717 100%);
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.28;
+      pointer-events: none;
+      animation: drift 9s ease-in-out infinite alternate;
+    }
+
+    body::before { top: -80px; right: -50px; background: var(--pink); }
+    body::after { bottom: -100px; left: -60px; background: var(--violet); animation-delay: -4s; }
+
+    @keyframes drift {
+      to { transform: translate3d(30px, 22px, 0) scale(1.1); }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(780px, 100%);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 0 18px;
+      text-align: center;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 15px;
+      font-size: 24px;
+      background: linear-gradient(135deg, rgba(155,108,255,.6), rgba(255,95,200,.45));
+      box-shadow: 0 10px 30px rgba(155,108,255,.25);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 4vw, 2.15rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(20px, 5vw, 42px);
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .score-pill {
+      flex: none;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 200, 87, 0.28);
+      border-radius: 999px;
+      color: #ffe29a;
+      background: rgba(255, 200, 87, 0.09);
+    }
+
+    .progress-track {
+      height: 9px;
+      margin-bottom: clamp(24px, 5vw, 36px);
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+    }
+
+    .progress-bar {
+      width: 10%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--violet), var(--pink), var(--gold));
+      box-shadow: 0 0 18px rgba(255, 95, 200, 0.55);
+      transition: width 0.45s ease;
+    }
+
+    .question {
+      margin: 0 0 24px;
+      font-size: clamp(1.25rem, 3.6vw, 1.75rem);
+      line-height: 1.38;
+      letter-spacing: -0.025em;
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+    }
+
+    .answer {
+      width: 100%;
+      min-height: 58px;
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      color: var(--text);
+      text-align: left;
+      font: inherit;
+      font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+      font-weight: 600;
+      line-height: 1.35;
+      cursor: pointer;
+      background: rgba(255,255,255,.055);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .answer:hover:not(:disabled),
+    .answer:focus-visible:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: rgba(155,108,255,.75);
+      background: rgba(155,108,255,.14);
+      outline: none;
+    }
+
+    .answer:disabled { cursor: default; }
+
+    .letter {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: #ddd4f7;
+      background: rgba(255,255,255,.09);
+      font-size: .9rem;
+      font-weight: 800;
+    }
+
+    .answer.correct {
+      border-color: rgba(67,230,162,.8);
+      background: rgba(67,230,162,.14);
+    }
+
+    .answer.correct .letter { color: #081c15; background: var(--green); }
+
+    .answer.wrong {
+      border-color: rgba(255,102,128,.8);
+      background: rgba(255,102,128,.13);
+    }
+
+    .answer.wrong .letter { color: #28070d; background: var(--red); }
+
+    .footer-note {
+      margin: 18px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: .82rem;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 10;
+      inset: 0;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(5, 3, 14, 0.76);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .22s ease, visibility .22s ease;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    .popup {
+      width: min(430px, 100%);
+      padding: 32px 26px 26px;
+      border: 1px solid var(--panel-border);
+      border-radius: 26px;
+      text-align: center;
+      background: #18112f;
+      box-shadow: var(--shadow);
+      transform: translateY(15px) scale(.97);
+      transition: transform .22s ease;
+    }
+
+    .overlay.show .popup { transform: translateY(0) scale(1); }
+
+    .popup-icon {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 16px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      font-size: 34px;
+      font-weight: 800;
+    }
+
+    .popup-icon.good { color: #071a12; background: var(--green); box-shadow: 0 0 32px rgba(67,230,162,.32); }
+    .popup-icon.bad { color: #25060c; background: var(--red); box-shadow: 0 0 32px rgba(255,102,128,.3); }
+
+    .popup h2 {
+      margin: 0 0 8px;
+      font-size: 1.65rem;
+    }
+
+    .popup p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .primary-button {
+      min-width: 150px;
+      min-height: 50px;
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--violet), var(--pink));
+      box-shadow: 0 10px 26px rgba(155,108,255,.28);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .primary-button:hover,
+    .primary-button:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(155,108,255,.4);
+      outline: none;
+    }
+
+    .result-screen {
+      display: none;
+      text-align: center;
+    }
+
+    .result-screen.active { display: block; }
+    .quiz-screen.hidden { display: none; }
+
+    .result-badge {
+      width: 92px;
+      height: 92px;
+      margin: 2px auto 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 30px;
+      font-size: 43px;
+      background: linear-gradient(135deg, rgba(155,108,255,.7), rgba(255,95,200,.62));
+      box-shadow: 0 16px 45px rgba(155,108,255,.3);
+    }
+
+    .result-screen h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.7rem, 5vw, 2.35rem);
+    }
+
+    .final-score {
+      margin: 14px 0 6px;
+      font-size: clamp(2.8rem, 10vw, 4.6rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      background: linear-gradient(90deg, #c5a9ff, #ff8ed9, #ffd67d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .result-message {
+      max-width: 470px;
+      margin: 14px auto 25px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 520px) {
+      body { place-items: start center; padding: 14px; }
+      .brand { margin-top: 4px; margin-bottom: 13px; }
+      .brand-icon { width: 40px; height: 40px; border-radius: 13px; font-size: 21px; }
+      .card { border-radius: 22px; }
+      .answer { min-height: 54px; padding: 11px 12px; gap: 11px; border-radius: 14px; }
+      .letter { width: 31px; height: 31px; flex-basis: 31px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="brand" aria-label="Aura Farming Quiz">
+      <div class="brand-icon" aria-hidden="true">✦</div>
+      <div>
+        <h1>Aura Farming Quiz</h1>
+        <div class="subtitle">10 questions · 100 points</div>
+      </div>
+    </header>
+
+    <section class="card" aria-live="polite">
+      <div id="quizScreen" class="quiz-screen">
+        <div class="top-row">
+          <span id="questionCounter">Question 1 of 10</span>
+          <span id="scoreDisplay" class="score-pill">Score: 0</span>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <h2 id="questionText" class="question"></h2>
+        <div id="answerButtons" class="answers"></div>
+        <p class="footer-note">Choose one answer. Each question is worth 10 points.</p>
+      </div>
+
+      <div id="resultScreen" class="result-screen">
+        <div class="result-badge" aria-hidden="true">✦</div>
+        <h2>Quiz complete!</h2>
+        <div id="finalScore" class="final-score">0 / 100</div>
+        <p id="resultMessage" class="result-message"></p>
+        <button id="restartButton" class="primary-button" type="button">Try Again</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="feedbackOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-describedby="feedbackText">
+    <div class="popup">
+      <div id="feedbackIcon" class="popup-icon" aria-hidden="true"></div>
+      <h2 id="feedbackTitle"></h2>
+      <p id="feedbackText"></p>
+      <button id="nextButton" class="primary-button" type="button">Next Question</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: 'What does “aura” commonly mean among young people today?',
+        answers: [
+          'A person’s coolness, confidence, or skill',
+          'A person’s physical strength',
+          'A person’s popularity online',
+          'A person’s spiritual beliefs'
+        ],
+        correct: 0
+      },
+      {
+        question: 'What does “aura farming” mean in the simplest terms?',
+        answers: [
+          'Trying to become famous online',
+          'Intentionally doing something that makes you look cool',
+          'Copying someone else’s style',
+          'Avoiding embarrassing situations'
+        ],
+        correct: 1
+      },
+      {
+        question: 'Why is the word “farming” used in the expression “aura farming”?',
+        answers: [
+          'Because the expression originally referred to agriculture',
+          'Because farmers invented the expression',
+          'Because it refers to working outdoors',
+          'Because it means repeatedly doing something to gain or increase something'
+        ],
+        correct: 3
+      },
+      {
+        question: 'What can happen if someone overdoes aura farming?',
+        answers: [
+          'They can lose aura points because they seem cringe',
+          'They automatically become more popular',
+          'They become more confident',
+          'They gain more respect'
+        ],
+        correct: 0
+      },
+      {
+        question: 'Which is an example of an appropriate level of aura farming?',
+        answers: [
+          'Repeating the same party trick to everyone',
+          'Ignoring the audience during a performance',
+          'A performer repeating a popular move a few times because the crowd enjoys it',
+          'Performing the same gesture constantly'
+        ],
+        correct: 2
+      },
+      {
+        question: 'Why is the party example considered negative aura farming?',
+        answers: [
+          'The person tells a boring story',
+          'The person repeats the same impressive thing to everyone to gain cool points',
+          'The person refuses to speak to anyone',
+          'The person leaves the party early'
+        ],
+        correct: 1
+      },
+      {
+        question: 'What does the speaker say about aura farming and “main character energy”?',
+        answers: [
+          'They mean exactly the same thing',
+          'They are completely unrelated',
+          'They are different, although there is some overlap in mindset',
+          'Aura farming is another name for main character energy'
+        ],
+        correct: 2
+      },
+      {
+        question: 'Why are the Indonesian boat-race kids described as aura farming in a positive way?',
+        answers: [
+          'Their job is to hype up the team, and they do it while looking cool',
+          'They are trying to become famous on TikTok',
+          'They invented aura farming',
+          'They are professional dancers'
+        ],
+        correct: 0
+      },
+      {
+        question: 'Which Michael Jackson example is described as aura farming?',
+        answers: [
+          'Changing costumes several times during a concert',
+          'Standing completely still for about two minutes after appearing on stage',
+          'Repeating the same dance move throughout a performance',
+          'Speaking to the audience before singing'
+        ],
+        correct: 1
+      },
+      {
+        question: 'What is the speaker’s overall opinion of the phrase “aura farming”?',
+        answers: [
+          'It is a stupid expression that should disappear',
+          'It only makes sense when teenagers use it',
+          'It should only be used when talking about video games',
+          'It is a useful new phrase for an old concept, and people are having fun with it'
+        ],
+        correct: 3
+      }
+    ];
+
+    const letters = ['A', 'B', 'C', 'D'];
+    const questionText = document.getElementById('questionText');
+    const answerButtons = document.getElementById('answerButtons');
+    const questionCounter = document.getElementById('questionCounter');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const overlay = document.getElementById('feedbackOverlay');
+    const feedbackIcon = document.getElementById('feedbackIcon');
+    const feedbackTitle = document.getElementById('feedbackTitle');
+    const feedbackText = document.getElementById('feedbackText');
+    const nextButton = document.getElementById('nextButton');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+    const finalScore = document.getElementById('finalScore');
+    const resultMessage = document.getElementById('resultMessage');
+    const restartButton = document.getElementById('restartButton');
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    function showQuestion() {
+      answered = false;
+      const item = questions[currentQuestion];
+      questionCounter.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      scoreDisplay.textContent = `Score: ${score}`;
+      progressBar.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+      questionText.textContent = item.question;
+      answerButtons.innerHTML = '';
+
+      item.answers.forEach((answer, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'answer';
+        button.innerHTML = `<span class="letter">${letters[index]}</span><span>${answer}</span>`;
+        button.addEventListener('click', () => selectAnswer(index, button));
+        answerButtons.appendChild(button);
+      });
+
+      requestAnimationFrame(() => answerButtons.querySelector('.answer')?.focus());
+    }
+
+    function selectAnswer(selectedIndex, selectedButton) {
+      if (answered) return;
+      answered = true;
+
+      const item = questions[currentQuestion];
+      const buttons = [...answerButtons.querySelectorAll('.answer')];
+      buttons.forEach(button => button.disabled = true);
+      buttons[item.correct].classList.add('correct');
+
+      const isCorrect = selectedIndex === item.correct;
+      if (isCorrect) {
+        score += 10;
+        scoreDisplay.textContent = `Score: ${score}`;
+        feedbackIcon.textContent = '✓';
+        feedbackIcon.className = 'popup-icon good';
+        feedbackTitle.textContent = 'Correct!';
+        feedbackText.textContent = 'Great job! You earned 10 points.';
+      } else {
+        selectedButton.classList.add('wrong');
+        feedbackIcon.textContent = '×';
+        feedbackIcon.className = 'popup-icon bad';
+        feedbackTitle.textContent = 'Not quite!';
+        feedbackText.textContent = `The correct answer is ${letters[item.correct]}. ${item.answers[item.correct]}`;
+      }
+
+      nextButton.textContent = currentQuestion === questions.length - 1 ? 'See My Score' : 'Next Question';
+      overlay.classList.add('show');
+      nextButton.focus();
+    }
+
+    function goNext() {
+      overlay.classList.remove('show');
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion += 1;
+        setTimeout(showQuestion, 180);
+      } else {
+        setTimeout(showResults, 180);
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      resultScreen.classList.add('active');
+      finalScore.textContent = `${score} / 100`;
+
+      if (score === 100) {
+        resultMessage.textContent = 'Perfect score! Your aura is officially immaculate.';
+      } else if (score >= 80) {
+        resultMessage.textContent = 'Excellent work! You clearly understand aura farming.';
+      } else if (score >= 60) {
+        resultMessage.textContent = 'Nice job! You have a solid understanding of the topic.';
+      } else {
+        resultMessage.textContent = 'Good effort! Review the topic and try again to raise your score.';
+      }
+
+      restartButton.focus();
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      resultScreen.classList.remove('active');
+      quizScreen.classList.remove('hidden');
+      showQuestion();
+    }
+
+    nextButton.addEventListener('click', goNext);
+    restartButton.addEventListener('click', restartQuiz);
+    showQuestion();
+  </script>
+</body>
+</html>
