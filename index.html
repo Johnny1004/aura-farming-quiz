@@ -348,6 +348,78 @@
       line-height: 1.55;
     }
 
+
+    .student-screen {
+      display: block;
+    }
+
+    .student-screen.hidden {
+      display: none;
+    }
+
+    .student-intro {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .student-form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field-group label {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .field-group input {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .field-group input:focus {
+      border-color: rgba(155,108,255,.85);
+      background: rgba(155,108,255,.10);
+      box-shadow: 0 0 0 3px rgba(155,108,255,.12);
+    }
+
+    .student-form .primary-button {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .student-summary {
+      margin: 0 auto 22px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      text-align: left;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .student-summary strong {
+      color: var(--text);
+    }
+
     @media (max-width: 520px) {
       body { place-items: start center; padding: 14px; }
       .brand { margin-top: 4px; margin-bottom: 13px; }
@@ -373,7 +445,31 @@
     </header>
 
     <section class="card" aria-live="polite">
-      <div id="quizScreen" class="quiz-screen">
+      <div id="studentScreen" class="student-screen">
+        <h2 class="question" style="text-align:center; margin-bottom:10px;">Student Information</h2>
+        <p class="student-intro">Enter your information before starting the quiz.</p>
+
+        <form id="studentForm" class="student-form">
+          <div class="field-group">
+            <label for="studentName">Full Name</label>
+            <input id="studentName" name="studentName" type="text" autocomplete="name" required maxlength="80" placeholder="Enter your full name">
+          </div>
+
+          <div class="field-group">
+            <label for="studentDate">Date</label>
+            <input id="studentDate" name="studentDate" type="date" required>
+          </div>
+
+          <div class="field-group">
+            <label for="studentClass">Class</label>
+            <input id="studentClass" name="studentClass" type="text" required maxlength="30" placeholder="Example: 8A">
+          </div>
+
+          <button class="primary-button" type="submit">Start Quiz</button>
+        </form>
+      </div>
+
+      <div id="quizScreen" class="quiz-screen hidden">
         <div class="top-row">
           <span id="questionCounter">Question 1 of 10</span>
           <span id="scoreDisplay" class="score-pill">Score: 0</span>
@@ -389,6 +485,7 @@
       <div id="resultScreen" class="result-screen">
         <div class="result-badge" aria-hidden="true">✦</div>
         <h2>Quiz complete!</h2>
+        <div id="studentSummary" class="student-summary"></div>
         <div id="finalScore" class="final-score">0 / 100</div>
         <p id="resultMessage" class="result-message"></p>
         <button id="restartButton" class="primary-button" type="button">Try Again</button>
@@ -525,10 +622,45 @@
     const finalScore = document.getElementById('finalScore');
     const resultMessage = document.getElementById('resultMessage');
     const restartButton = document.getElementById('restartButton');
+    const studentScreen = document.getElementById('studentScreen');
+    const studentForm = document.getElementById('studentForm');
+    const studentName = document.getElementById('studentName');
+    const studentDate = document.getElementById('studentDate');
+    const studentClass = document.getElementById('studentClass');
+    const studentSummary = document.getElementById('studentSummary');
 
     let currentQuestion = 0;
     let score = 0;
     let answered = false;
+    let studentInfo = {
+      name: '',
+      date: '',
+      className: ''
+    };
+
+    function formatDateForDisplay(value) {
+      if (!value) return '';
+      const [year, month, day] = value.split('-');
+      return `${month}/${day}/${year}`;
+    }
+
+    function startQuiz(event) {
+      event.preventDefault();
+
+      if (!studentForm.reportValidity()) return;
+
+      studentInfo = {
+        name: studentName.value.trim(),
+        date: studentDate.value,
+        className: studentClass.value.trim()
+      };
+
+      studentScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      currentQuestion = 0;
+      score = 0;
+      showQuestion();
+    }
 
     function showQuestion() {
       answered = false;
@@ -591,10 +723,24 @@
       }
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
     function showResults() {
       quizScreen.classList.add('hidden');
       resultScreen.classList.add('active');
       finalScore.textContent = `${score} / 100`;
+      studentSummary.innerHTML = `
+        <div><strong>Name:</strong> ${escapeHtml(studentInfo.name)}</div>
+        <div><strong>Date:</strong> ${escapeHtml(formatDateForDisplay(studentInfo.date))}</div>
+        <div><strong>Class:</strong> ${escapeHtml(studentInfo.className)}</div>
+      `;
 
       if (score === 100) {
         resultMessage.textContent = 'Perfect score! Your aura is officially immaculate.';
@@ -612,14 +758,29 @@
     function restartQuiz() {
       currentQuestion = 0;
       score = 0;
+      answered = false;
       resultScreen.classList.remove('active');
-      quizScreen.classList.remove('hidden');
-      showQuestion();
+      quizScreen.classList.add('hidden');
+      studentScreen.classList.remove('hidden');
+      studentForm.reset();
+      setToday();
+      studentName.focus();
+    }
+
+    function setToday() {
+      const today = new Date();
+      const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
+      studentDate.value = local;
     }
 
     nextButton.addEventListener('click', goNext);
     restartButton.addEventListener('click', restartQuiz);
-    showQuestion();
+    studentForm.addEventListener('submit', startQuiz);
+
+    setToday();
+    studentName.focus();
   </script>
 </body>
 </html>
